@@ -11,6 +11,14 @@ Hackathon: **ODSC × Nebius — Build a Research Agent**, Oct 28–Nov 20, 2026
 https://www.meetup.com/san-francisco-odsc/events/316812136/
 Submission (Nov 20): a public repository with a README and a short demo.
 
+## Demo
+
+[▶ Watch the demo video (2 min)](research-agent-demo-groq-v2.mp4) — a full
+run of the agent (plan → search → synthesize → verify), the architecture and
+data flow, the citation guardrail firing on a planted bad citation, all with
+narration. Recorded with the model on Groq while Nebius Token Factory
+credits were pending; Nebius remains the default in the code.
+
 ## Quickstart
 
 ```bash
