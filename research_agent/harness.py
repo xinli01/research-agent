@@ -52,7 +52,9 @@ def synthesize(question, sources, model):
     prompt = (
         "TASK: SYNTHESIZE\n"
         "Answer the question using ONLY the sources below. "
-        "Cite every factual claim as [n] where n is the source number. "
+        "Cite every factual claim inline as [n] where n is the source "
+        "number, e.g. 'The event is free [1].' Use exactly that bracket "
+        "format — no other citation style, no footnote markers, no links. "
         "If the sources do not cover something, say so instead of guessing.\n\n"
         f"Question: {question}\n\nSources:\n{numbered}"
     )
@@ -60,10 +62,13 @@ def synthesize(question, sources, model):
 
 
 def verify_citations(answer, sources):
-    """Guardrail: every [n] in the answer must map to a retrieved source.
-    Returns the list of citation numbers that do NOT (empty = clean)."""
-    nums = sorted({int(n) for n in re.findall(r"\[(\d+)\]", answer)})
-    return [n for n in nums if n < 1 or n > len(sources)]
+    """Guardrail: every citation in the answer must map to a retrieved
+    source. Recognizes the required [n] format and the 【n†...】 style some
+    models emit instead, so a format deviation cannot slip past unchecked.
+    Returns the list of citation numbers that do NOT map (empty = clean)."""
+    nums = {int(n) for n in re.findall(r"\[(\d+)\]", answer)}
+    nums |= {int(n) for n in re.findall(r"【(\d+)†", answer)}
+    return sorted(n for n in nums if n < 1 or n > len(sources))
 
 
 def run_research(question, model, search):

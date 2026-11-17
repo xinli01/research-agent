@@ -1,6 +1,10 @@
 """Model layer: the LLM. It only ever produces text.
 
 Live path: Nebius Token Factory, OpenAI-compatible chat API.
+The endpoint is a config swap: set LLM_BASE_URL / LLM_API_KEY / LLM_MODEL in
+.env to point the same client at any OpenAI-compatible provider (e.g. Groq
+or OpenRouter) for testing while Nebius credits are pending. Nebius stays
+the default and is what the submitted project runs on.
 Demo path: DemoModel, a canned stand-in so the pipeline runs without keys.
 """
 import json
@@ -12,13 +16,27 @@ DEFAULT_MODEL = "meta-llama/Meta-Llama-3.1-70B-Instruct"
 
 
 class NebiusModel:
-    """An open model served by Nebius Token Factory."""
+    """An open model served by Nebius Token Factory (default), or by any
+    OpenAI-compatible endpoint when LLM_BASE_URL is set in .env."""
 
-    def __init__(self, api_key=None, model=None):
-        self.api_key = api_key or os.environ.get("NEBIUS_API_KEY", "")
-        self.model = model or os.environ.get("NEBIUS_MODEL", DEFAULT_MODEL)
-        if not self.api_key:
-            raise ValueError("NEBIUS_API_KEY is not set (see .env.example)")
+    def __init__(self, api_key=None, model=None, base_url=None):
+        self.base_url = base_url or os.environ.get("LLM_BASE_URL", NEBIUS_BASE)
+        if self.base_url == NEBIUS_BASE:
+            self.api_key = api_key or os.environ.get("NEBIUS_API_KEY", "")
+            self.model = model or os.environ.get("NEBIUS_MODEL", DEFAULT_MODEL)
+            if not self.api_key:
+                raise ValueError("NEBIUS_API_KEY is not set (see .env.example)")
+        else:
+            self.api_key = (
+                api_key
+                or os.environ.get("LLM_API_KEY", "")
+                or os.environ.get("NEBIUS_API_KEY", "")
+            )
+            self.model = model or os.environ.get("LLM_MODEL", "")
+            if not self.api_key:
+                raise ValueError("LLM_API_KEY is not set (see .env.example)")
+            if not self.model:
+                raise ValueError("LLM_MODEL is not set (see .env.example)")
 
     def complete(self, prompt, system="You are a helpful research assistant."):
         body = json.dumps(
@@ -32,11 +50,14 @@ class NebiusModel:
             }
         ).encode()
         req = urllib.request.Request(
-            NEBIUS_BASE + "/chat/completions",
+            self.base_url + "/chat/completions",
             data=body,
             headers={
                 "Content-Type": "application/json",
                 "Authorization": "Bearer " + self.api_key,
+                # Some providers sit behind Cloudflare, which 403s the
+                # default Python-urllib user agent.
+                "User-Agent": "research-agent/1.0",
             },
             method="POST",
         )
