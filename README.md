@@ -25,6 +25,14 @@ can see the shape of a cited answer end to end:
 python3 -m research_agent --demo "What is the ODSC x Nebius hackathon about?"
 ```
 
+See the citation guardrail fire on a planted bad citation (an answer that
+cites [9] when only 3 sources were retrieved):
+
+```bash
+python3 examples/flag_demo.py
+# WARNING: citations with no matching source: [9]
+```
+
 No third-party dependencies — standard library only (Python 3.10+).
 
 ## How the code maps to the class concepts
