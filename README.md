@@ -16,7 +16,7 @@ Submission (Nov 20): a public repository with a README and a short demo.
 
 ## Demo
 
-[▶ Watch the demo video (2 min)](research-agent-demo-nebius.mp4) — a full
+[▶ Watch the demo video (2 min)](https://youtu.be/wTjCwZb1spU) — a full
 run of the agent (plan → search → synthesize → verify), the architecture and
 data flow, the citation guardrail firing on a planted bad citation, all with
 narration. Recorded from a real live run on Nebius Token Factory
