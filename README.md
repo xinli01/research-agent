@@ -4,7 +4,10 @@ A working research agent that turns a question into a **verifiable, sourced
 answer**: it plans search queries, searches the live web with Tavily, and
 synthesizes an answer with inline citations using an open model on Nebius
 Token Factory. Every factual claim must cite a source — the harness checks
-that every citation points to a real retrieved source.
+that every citation points to a real retrieved source. The printed source
+list shows everything the search retrieved; the answer cites only the
+sources it actually used — retrieved-but-uncited sources are normal,
+because search returns more than any single answer needs.
 
 Hackathon: **ODSC × Nebius — Build a Research Agent**, Oct 28–Nov 20, 2026
 (free, virtual). Register here:
