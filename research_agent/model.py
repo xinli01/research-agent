@@ -3,16 +3,21 @@
 Live path: Nebius Token Factory, OpenAI-compatible chat API.
 The endpoint is a config swap: set LLM_BASE_URL / LLM_API_KEY / LLM_MODEL in
 .env to point the same client at any OpenAI-compatible provider (e.g. Groq
-or OpenRouter) for testing while Nebius credits are pending. Nebius stays
-the default and is what the submitted project runs on.
+or OpenRouter). Nebius is the default and is what the submitted project
+runs on (verified live 2026-11-19).
 Demo path: DemoModel, a canned stand-in so the pipeline runs without keys.
 """
+import http.client
 import json
 import os
+import time
+import urllib.error
 import urllib.request
 
 NEBIUS_BASE = "https://api.tokenfactory.nebius.com/v1"
-DEFAULT_MODEL = "meta-llama/Meta-Llama-3.1-70B-Instruct"
+# The Token Factory catalog retired its Llama models; gpt-oss-120b is the
+# open model this project was verified live with on 2026-11-19.
+DEFAULT_MODEL = "openai/gpt-oss-120b"
 
 
 class NebiusModel:
@@ -61,8 +66,30 @@ class NebiusModel:
             },
             method="POST",
         )
-        with urllib.request.urlopen(req, timeout=120) as resp:
-            data = json.load(resp)
+        # Transient connection drops (a proxy or CDN closing the tunnel
+        # mid-request) should not kill a whole run, so retry those a few
+        # times. Real HTTP errors (401/402/404...) fail fast instead.
+        data = None
+        last_error = None
+        for attempt in range(4):
+            try:
+                with urllib.request.urlopen(req, timeout=120) as resp:
+                    data = json.load(resp)
+                break
+            except urllib.error.HTTPError:
+                raise
+            except (
+                http.client.IncompleteRead,
+                http.client.RemoteDisconnected,
+                ConnectionError,
+                TimeoutError,
+                urllib.error.URLError,
+            ) as exc:
+                last_error = exc
+                if attempt < 3:
+                    time.sleep(2 * (attempt + 1))
+        if data is None:
+            raise last_error
         return data["choices"][0]["message"]["content"]
 
 

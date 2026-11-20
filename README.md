@@ -13,11 +13,11 @@ Submission (Nov 20): a public repository with a README and a short demo.
 
 ## Demo
 
-[▶ Watch the demo video (2 min)](research-agent-demo-groq-v2.mp4) — a full
+[▶ Watch the demo video (2 min)](research-agent-demo-nebius.mp4) — a full
 run of the agent (plan → search → synthesize → verify), the architecture and
 data flow, the citation guardrail firing on a planted bad citation, all with
-narration. Recorded with the model on Groq while Nebius Token Factory
-credits were pending; Nebius remains the default in the code.
+narration. Recorded from a real live run on Nebius Token Factory
+(openai/gpt-oss-120b) + Tavily on Nov 19, 2026.
 
 ## Quickstart
 
@@ -55,8 +55,8 @@ No third-party dependencies — standard library only (Python 3.10+).
 ## Getting the keys (free tiers)
 
 - **Nebius Token Factory** — create an account at https://tokenfactory.nebius.com
-  and generate an API key. Default model:
-  `meta-llama/Meta-Llama-3.1-70B-Instruct` (override with `NEBIUS_MODEL`).
+  and generate an API key. Default model: `openai/gpt-oss-120b`
+  (override with `NEBIUS_MODEL`).
 - **Tavily** — create a free account at https://tavily.com and copy the API
   key. Free tier covers the hackathon's search volume.
 

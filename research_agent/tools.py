@@ -3,8 +3,11 @@
 Live path: Tavily real-time search API.
 Demo path: DemoSearch, canned results so the pipeline runs without keys.
 """
+import http.client
 import json
 import os
+import time
+import urllib.error
 import urllib.request
 
 TAVILY_URL = "https://api.tavily.com/search"
@@ -30,11 +33,44 @@ class TavilySearch:
         req = urllib.request.Request(
             TAVILY_URL,
             data=body,
-            headers={"Content-Type": "application/json"},
+            headers={
+                "Content-Type": "application/json",
+                # A browser-like UA: with a bare library UA the connection
+                # to the search API gets cut mid-response on some networks
+                # (observed 2026-11-19: IncompleteRead / RemoteDisconnected
+                # with a default UA, clean 200s with this one).
+                "User-Agent": (
+                    "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 "
+                    "(KHTML, like Gecko) Chrome/120.0 Safari/537.36"
+                ),
+                # Without this, the response body can arrive compressed /
+                # chunked in a way urllib fails to read (IncompleteRead).
+                "Accept-Encoding": "identity",
+            },
             method="POST",
         )
-        with urllib.request.urlopen(req, timeout=60) as resp:
-            data = json.load(resp)
+        # The connection to the search API occasionally drops mid-response
+        # (IncompleteRead / RemoteDisconnected with 0 bytes read). Those
+        # failures are transient, so retry a few times before giving up.
+        data = None
+        last_error = None
+        for attempt in range(6):
+            try:
+                with urllib.request.urlopen(req, timeout=60) as resp:
+                    data = json.load(resp)
+                break
+            except (
+                http.client.IncompleteRead,
+                http.client.RemoteDisconnected,
+                ConnectionError,
+                TimeoutError,
+                urllib.error.URLError,
+            ) as exc:
+                last_error = exc
+                if attempt < 5:
+                    time.sleep(2 * (attempt + 1))
+        if data is None:
+            raise last_error
         return [
             {
                 "title": r.get("title", ""),
